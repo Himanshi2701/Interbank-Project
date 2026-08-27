@@ -8,12 +8,14 @@ import networkx as nx
 
 def create_network_plot(network, output_path):
     """Draw core banks in red and peripheral banks in blue."""
-    positions = nx.spring_layout(network, seed=42)
+    # A larger preferred node distance makes the dense core easier to read.
+    positions = nx.spring_layout(network, seed=42, k=1.2)
     node_colors = [
         "#c0392b" if network.nodes[bank]["bank_type"] == "Core" else "#2980b9"
         for bank in network.nodes
     ]
-    node_sizes = [network.nodes[bank]["total_assets"] / 3 for bank in network.nodes]
+    # Assets control marker size, but the divisor keeps core labels separate.
+    node_sizes = [network.nodes[bank]["total_assets"] / 5 for bank in network.nodes]
 
     plt.figure(figsize=(11, 8))
     nx.draw_networkx_nodes(network, positions, node_color=node_colors, node_size=node_sizes)

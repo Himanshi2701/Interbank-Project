@@ -117,8 +117,12 @@ def main():
         ),
     ]
     notebook["metadata"] = {
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-        "language_info": {"name": "python", "version": "3"},
+        "kernelspec": {
+            "display_name": "Python 3.14 (Interbank Project)",
+            "language": "python",
+            "name": "interbank-project",
+        },
+        "language_info": {"name": "python", "version": "3.14"},
     }
 
     output_path = PROJECT_ROOT / "notebooks" / "main_analysis.ipynb"
