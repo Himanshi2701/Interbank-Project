@@ -1,0 +1,10 @@
+# Python cache files created when scripts run
+__pycache__/
+*.py[cod]
+
+# Jupyter automatically created checkpoint folders
+.ipynb_checkpoints/
+
+# Local virtual environments
+.venv/
+venv/
