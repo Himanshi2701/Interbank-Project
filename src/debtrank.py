@@ -3,7 +3,9 @@
 import pandas as pd
 
 
-def calculate_debtrank(network, shocked_bank):
+def calculate_debtrank(
+    network, shocked_bank, initial_distress=1.0, loss_given_default=1.0
+):
     """Propagate distress after one bank fails and return its systemic impact.
 
     If a borrower is distressed, its lenders face losses.  For each lender,
@@ -12,14 +14,18 @@ def calculate_debtrank(network, shocked_bank):
     """
     if shocked_bank not in network:
         raise ValueError(f"{shocked_bank} is not in the lending network.")
+    if not 0 < initial_distress <= 1:
+        raise ValueError("initial_distress must be greater than 0 and at most 1.")
+    if not 0 <= loss_given_default <= 1:
+        raise ValueError("loss_given_default must be between 0 and 1.")
 
     # h is each bank's total distress level: 0 means healthy, 1 means default.
     distress = {bank: 0.0 for bank in network.nodes}
-    distress[shocked_bank] = 1.0
+    distress[shocked_bank] = initial_distress
 
     # The value records the *new* distress to transmit in the next round.
     # Passing only the new amount avoids counting the same loss repeatedly.
-    active_banks = {shocked_bank: 1.0}
+    active_banks = {shocked_bank: initial_distress}
 
     while active_banks:
         next_active_banks = {}
@@ -33,7 +39,10 @@ def calculate_debtrank(network, shocked_bank):
 
                 # Calculate only the additional loss created in this round.
                 additional_distress = (
-                    new_borrower_distress * exposure / lender_capital
+                    new_borrower_distress
+                    * exposure
+                    * loss_given_default
+                    / lender_capital
                 )
                 old_distress = distress[lender]
                 new_distress = min(1.0, old_distress + additional_distress)

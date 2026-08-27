@@ -19,24 +19,27 @@ simulation in Python.
 4. Rank banks by the systemic impact of their individual failure.
 5. Run 3,000 Monte Carlo simulations under random and size-weighted bank
    failure scenarios.
+6. Explore user-selected stress tests in an interactive dashboard, including
+   shock severity, loss-given-default, and core-bank capital-buffer scenarios.
 
 ## Key Finding
 
-Placeholder: compare the mean and 95th-percentile systemic loss for random
-and size-weighted failures after running the analysis. In this model,
-size-weighted failures are expected to produce larger losses because core
-banks hold a larger share of system assets and lending relationships.
+In the baseline simulation, random failures produce a mean systemic loss of
+9.14%, while size-weighted failures produce a mean loss of 20.22%. This shows
+that failures involving large, well-connected core banks create greater
+contagion in the synthetic system.
 
 ## Project Structure
 
 ```text
 interbank-project/
-├── data/       # Generated bank and lending-network CSV files
-├── notebooks/  # End-to-end Jupyter analysis notebook
-├── outputs/    # Simulation results, rankings, and plots
-├── src/        # Clear, reusable Python analysis modules
-├── README.md
-└── requirements.txt
+|-- app.py       # Interactive Streamlit stress-testing dashboard
+|-- data/        # Generated bank and lending-network CSV files
+|-- notebooks/   # End-to-end Jupyter analysis notebook
+|-- outputs/     # Simulation results, rankings, and plots
+|-- src/         # Clear, reusable Python analysis modules
+|-- README.md
+`-- requirements.txt
 ```
 
 ## Tools Used
@@ -47,6 +50,7 @@ interbank-project/
 - NetworkX
 - Matplotlib
 - Jupyter Notebook
+- Streamlit
 
 ## Run the Project
 
@@ -58,3 +62,14 @@ python src/run_analysis.py
 ```
 
 The generated figures and CSV files will appear in `outputs/`.
+
+## Interactive Dashboard
+
+The Streamlit dashboard lets a user select a bank failure and immediately see
+the resulting DebtRank systemic impact, affected banks, lending network, and
+Monte Carlo comparison. It also tests recovery assumptions and whether higher
+core-bank capital buffers reduce contagion. Run it from the project root:
+
+```powershell
+streamlit run app.py
+```
