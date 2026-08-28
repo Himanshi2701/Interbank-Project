@@ -24,7 +24,25 @@ from monte_carlo import run_monte_carlo, summarise_results
 from scenario_analysis import apply_core_capital_buffer, calculate_network_metrics
 
 
-st.set_page_config(page_title="Interbank Systemic Risk Explorer", layout="wide")
+st.set_page_config(
+    page_title="Interbank Systemic Risk Explorer",
+    page_icon="🏦",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+st.markdown(
+    """
+    <style>
+    .block-container { max-width: 1500px; padding-top: 2rem; padding-bottom: 3rem; }
+    [data-testid="stMetric"] { background: #f4f7fb; border: 1px solid #d9e2ec; padding: 1rem; border-radius: 8px; }
+    [data-testid="stMetricValue"] { font-size: 1.8rem; }
+    h1 { color: #12304a; }
+    h2, h3 { color: #1d4966; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def load_or_create_analysis():
@@ -104,6 +122,10 @@ st.write(
     "Select a bank failure to see how financial distress travels through the "
     "synthetic interbank lending network."
 )
+st.info(
+    "Start in the sidebar: choose a failing bank and adjust the shock assumptions. "
+    "The metrics and affected-bank table update automatically."
+)
 
 st.sidebar.header("Shock Scenario")
 selected_bank = st.sidebar.selectbox(
@@ -180,7 +202,15 @@ with scenario_tab:
     network_column, table_column = st.columns([3, 2])
 
     with network_column:
-        st.pyplot(draw_network(network, selected_bank), clear_figure=True)
+        st.subheader("How distress travels through the network")
+        st.caption(
+            "Yellow = selected failed bank | Red = core bank | Blue = peripheral bank"
+        )
+        st.pyplot(
+            draw_network(network, selected_bank),
+            clear_figure=True,
+            use_container_width=True,
+        )
 
     with table_column:
         # Convert the distress dictionary into a table for the selected scenario.
@@ -200,6 +230,10 @@ with scenario_tab:
 with comparison_tab:
     summary = summarise_results(simulation_results)
     st.subheader("Monte Carlo Loss Summary")
+    st.caption(
+        "Each distribution shows the share of total banking-system assets affected "
+        "across 3,000 simulated failures."
+    )
     st.dataframe(summary, hide_index=True, use_container_width=True)
 
     figure, axis = plt.subplots(figsize=(10, 5))
@@ -215,7 +249,7 @@ with comparison_tab:
     axis.set_xlabel("Systemic loss (share of total assets)")
     axis.set_ylabel("Number of simulations")
     axis.legend()
-    st.pyplot(figure, clear_figure=True)
+    st.pyplot(figure, clear_figure=True, use_container_width=True)
 
 with ranking_tab:
     st.subheader("Banks Ranked by Individual Failure Impact")

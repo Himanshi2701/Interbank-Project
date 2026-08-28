@@ -1,13 +1,24 @@
 # Interbank Contagion & Systemic Risk Analysis
 
-## Objective
+## Live Dashboard
+
+Explore the model interactively: choose a bank failure, change the shock
+assumptions, inspect the network, and compare the result with Monte Carlo
+stress tests.
+
+**[Open the live Interbank Systemic Risk Explorer](https://interbank-project-84an6bfff3486vg3dnx3rd.streamlit.app)**
+
+> The live dashboard is hosted by Streamlit. GitHub stores the code and data,
+> but it does not run Streamlit applications inside the repository page.
+
+## What This Project Does
 
 This project models how the failure of one bank can spread financial distress
 through an interbank lending network. It is a small, synthetic example built
 to demonstrate network analysis, systemic-risk modelling, and Monte Carlo
 simulation in Python.
 
-## Method
+## Analysis Workflow
 
 1. Generate 20 synthetic banks: five large core banks and fifteen smaller
    peripheral banks.
@@ -73,3 +84,23 @@ core-bank capital buffers reduce contagion. Run it from the project root:
 ```powershell
 streamlit run app.py
 ```
+
+### Deploy Your Own Dashboard
+
+GitHub's file view does not execute Python or Streamlit applications. Opening
+`app.py` on GitHub will therefore show the source code, not the dashboard.
+
+To publish the dashboard, deploy this repository with [Streamlit Community
+Cloud](https://share.streamlit.io/):
+
+1. Sign in with GitHub and choose **Create app**.
+2. Select this repository and its branch.
+3. Set the main file path to `app.py`.
+4. Deploy the app.
+
+The `requirements.txt` file is already in the repository, so Streamlit Cloud
+will install the dashboard dependencies automatically. The generated CSV files
+are used when present; if they are absent, the dashboard creates the required
+data and analysis files on startup.
+
+GitHub Pages cannot host this dashboard because it only serves static files.
