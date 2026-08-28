@@ -1,4 +1,4 @@
-# Interbank Contagion & Systemic Risk Analysis
+m# Interbank Contagion & Systemic Risk Analysis
 
 ## Objective
 
@@ -73,3 +73,6 @@ core-bank capital buffers reduce contagion. Run it from the project root:
 ```powershell
 streamlit run app.py
 ```
+## Live Dashboard
+
+[Open the Interbank Systemic Risk Explorer](https://interbank-project-2701.streamlit.app)
