@@ -45,7 +45,8 @@ st.markdown(
 )
 
 
-def load_or_create_analysis():
+@st.cache_data(show_spinner="Loading model data and simulation results...")
+def load_or_create_analysis(force_refresh=False):
     """Load saved results, or create them if this is the first dashboard run."""
     data_folder = PROJECT_ROOT / "data"
     output_folder = PROJECT_ROOT / "outputs"
@@ -57,18 +58,30 @@ def load_or_create_analysis():
     results_path = output_folder / "monte_carlo_results.csv"
     ranking_path = output_folder / "systemic_importance_ranking.csv"
 
+    def valid_dataframe(df, required_columns):
+        if df is None or df.empty:
+            return False
+        if set(required_columns).difference(df.columns):
+            return False
+        if df.isna().any().any():
+            return False
+        return True
+
     # Generate the two input files only if they do not already exist.
-    if not banks_path.exists() or not edges_path.exists():
+    if force_refresh or not banks_path.exists() or not edges_path.exists():
         banks = create_bank_data()
         banks.to_csv(banks_path, index=False)
         network = build_lending_network(banks)
         save_edge_list(network, edges_path)
     else:
         banks = pd.read_csv(banks_path)
+        if not valid_dataframe(banks, ["bank_id", "bank_type", "total_assets", "capital"]):
+            banks = create_bank_data()
+            banks.to_csv(banks_path, index=False)
         network = build_lending_network(banks)
 
     # Reuse saved Monte Carlo results, because 3,000 simulations take longer.
-    if not results_path.exists():
+    if force_refresh or not results_path.exists():
         results = run_monte_carlo(network, number_of_simulations=3000)
         results.to_csv(results_path, index=False)
         summarise_results(results).to_csv(
@@ -76,12 +89,21 @@ def load_or_create_analysis():
         )
     else:
         results = pd.read_csv(results_path)
+        if not valid_dataframe(results, ["scenario", "simulation", "shocked_bank", "systemic_loss"]):
+            results = run_monte_carlo(network, number_of_simulations=3000)
+            results.to_csv(results_path, index=False)
+            summarise_results(results).to_csv(
+                output_folder / "monte_carlo_summary.csv", index=False
+            )
 
-    if not ranking_path.exists():
+    if force_refresh or not ranking_path.exists():
         ranking = rank_banks_by_systemic_impact(network)
         ranking.to_csv(ranking_path, index=False)
     else:
         ranking = pd.read_csv(ranking_path)
+        if not valid_dataframe(ranking, ["bank_id", "systemic_impact"]):
+            ranking = rank_banks_by_systemic_impact(network)
+            ranking.to_csv(ranking_path, index=False)
 
     return banks, network, results, ranking
 
@@ -114,8 +136,23 @@ def draw_network(network, shocked_bank):
     return figure
 
 
-# Load the model data once for the current dashboard session.
-banks, network, simulation_results, ranking = load_or_create_analysis()
+# Load the model data once for the current dashboard session. A refresh is
+# available because the cached simulation is intentionally reused between reruns.
+with st.sidebar:
+    st.header("Dashboard Controls")
+    refresh_analysis = st.button(
+        "Refresh analysis data",
+        help="Regenerate the synthetic network and run all 3,000 simulations.",
+        use_container_width=True,
+    )
+
+if refresh_analysis:
+    st.cache_data.clear()
+    banks, network, simulation_results, ranking = load_or_create_analysis(
+        force_refresh=True
+    )
+else:
+    banks, network, simulation_results, ranking = load_or_create_analysis()
 
 st.title("Interbank Systemic Risk Explorer")
 st.write(
@@ -172,6 +209,16 @@ policy_column.metric(
 st.caption(
     "Systemic impact is the share of total banking-system assets affected by distress."
 )
+
+with st.expander("Model and network overview", expanded=False):
+    overview_left, overview_middle, overview_right = st.columns(3)
+    overview_left.metric("Banks", f"{network.number_of_nodes():,}")
+    overview_middle.metric("Lending relationships", f"{network.number_of_edges():,}")
+    overview_right.metric("Simulations", f"{len(simulation_results):,}")
+    st.caption(
+        "Arrows point from lender to borrower. Core-bank capital buffers change "
+        "loss absorption while lending exposures remain fixed."
+    )
 
 # Let the user download the exact scenario configured in the sidebar.
 scenario_report = pd.DataFrame(

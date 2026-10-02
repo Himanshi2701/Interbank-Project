@@ -6,6 +6,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from generate_bank_data import validate_bank_data
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_FOLDER = PROJECT_ROOT / "data"
@@ -14,10 +16,11 @@ DATA_FOLDER = PROJECT_ROOT / "data"
 def build_lending_network(banks, seed=42):
     """Create a directed graph where lender -> borrower.
 
-    A core bank lends to every other core bank.  Each peripheral bank borrows
-    from one or two core banks.  The edge attribute 'exposure' is the amount
-    that the lender would lose if the borrower fully defaults.
+    A core bank lends to every other core bank. Each peripheral bank borrows
+    from one or two core banks. The edge attribute 'exposure' is the amount the
+    lender would lose if the borrower fully defaults.
     """
+    banks = validate_bank_data(banks.copy())
     random_generator = np.random.default_rng(seed)
     network = nx.DiGraph()
 
@@ -52,6 +55,19 @@ def build_lending_network(banks, seed=42):
         for lender in lenders:
             exposure = round(float(capital_by_bank[lender]) * 0.04, 2)
             network.add_edge(lender, borrower, exposure=exposure)
+
+    edge_exposures = [data["exposure"] for _, _, data in network.edges(data=True)]
+    if not edge_exposures or any(value <= 0 or pd.isna(value) for value in edge_exposures):
+        raise ValueError("All lending exposures must be positive and non-missing.")
+
+    if any(node == neighbor for node, neighbor in network.edges()):
+        raise ValueError("Self-loans are not allowed in the interbank network.")
+
+    for lender, borrower, data in network.edges(data=True):
+        if data["exposure"] > float(network.nodes[lender]["capital"]):
+            raise ValueError(
+                f"Exposure from {lender} to {borrower} exceeds lender capital."
+            )
 
     return network
 
