@@ -8,16 +8,21 @@ from debtrank import calculate_debtrank
 
 def run_monte_carlo(network, number_of_simulations=3000, seed=42):
     """Compare uniform random failures with failures weighted by bank size."""
-    random_generator = np.random.default_rng(seed)
     bank_ids = list(network.nodes)
     asset_sizes = np.array([network.nodes[bank]["total_assets"] for bank in bank_ids])
     size_probabilities = asset_sizes / asset_sizes.sum()
 
     results = []
+    scenario_seeds = {
+        "Random failure": seed,
+        "Size-weighted failure": seed + 1,
+    }
+
     for scenario, probabilities in [
         ("Random failure", None),
         ("Size-weighted failure", size_probabilities),
     ]:
+        random_generator = np.random.default_rng(scenario_seeds[scenario])
         for simulation_number in range(1, number_of_simulations + 1):
             shocked_bank = random_generator.choice(bank_ids, p=probabilities)
             systemic_loss, _ = calculate_debtrank(network, shocked_bank)
