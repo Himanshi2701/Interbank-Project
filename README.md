@@ -6,7 +6,7 @@ Explore the model interactively: choose a bank failure, change the shock
 assumptions, inspect the network, and compare the result with Monte Carlo
 stress tests.
 
-**[Open the live Interbank Systemic Risk Explorer](https://interbank-project-84an6bfff3486vg3dnx3rd.streamlit.app)**
+**[Open the live Interbank Systemic Risk Explorer](https://interbank-project-2701.streamlit.app/)**
 
 > The live dashboard is hosted by Streamlit. GitHub stores the code and data,
 > but it does not run Streamlit applications inside the repository page.
